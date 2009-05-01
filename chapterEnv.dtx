@@ -1,0 +1,1400 @@
+%^^A------------- Standard Spiel -----------------------------
+% \iffalse meta-comment
+%
+% Copyright (C) 2004 by Lee Netherton <ltn100@users.sourceforge.net>
+% -------------------------------------------------------
+%
+% This file may be distributed and/or modified under the
+% conditions of the LaTeX Project Public License, either version 1.2
+% of this license or (at your option) any later version.
+% The latest version of this license is in:
+%
+%    http://www.latex-project.org/lppl.txt
+%
+% and version 1.2 or later is part of all distributions of LaTeX
+% version 1999/12/01 or later.
+%
+% \fi
+%
+% \iffalse
+%<*driver|package>
+\def\datelastmodified/{2005/05/02}%
+\def\versionnumber/{v0.1}%
+\def\filedescription/{Provides Chapter and Section Environments}%
+%</driver|package>
+%<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]%
+%<package>\ProvidesPackage{chapterEnv}[\datelastmodified/ \versionnumber/ \filedescription/]
+%<*driver>
+\ProvidesFile{chapterEnv.dtx}[\datelastmodified/ \versionnumber/ \filedescription/]%
+\documentclass{ltxdoc}%
+\EnableCrossrefs%
+\CodelineIndex%
+\RecordChanges%
+\parindent  0pt
+\begin{document}%
+  \DocInput{chapterEnv.dtx}%
+  \PrintChanges%
+  \PrintIndex%
+\end{document}%
+%</driver>
+% \fi
+%
+% \CheckSum{0}
+%
+% \CharacterTable
+%  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
+%   Lower-case    \a\b\c\d\e\f\g\h\i\j\k\l\m\n\o\p\q\r\s\t\u\v\w\x\y\z
+%   Digits        \0\1\2\3\4\5\6\7\8\9
+%   Exclamation   \!     Double quote  \"     Hash (number) \#
+%   Dollar        \$     Percent       \%     Ampersand     \&
+%   Acute accent  \'     Left paren    \(     Right paren   \)
+%   Asterisk      \*     Plus          \+     Comma         \,
+%   Minus         \-     Point         \.     Solidus       \/
+%   Colon         \:     Semicolon     \;     Less than     \<
+%   Equals        \=     Greater than  \>     Question mark \?
+%   Commercial at \@     Left bracket  \[     Backslash     \\
+%   Right bracket \]     Circumflex    \^     Underscore    \_
+%   Grave accent  \`     Left brace    \{     Vertical bar  \|
+%   Right brace   \}     Tilde         \~}
+%
+%
+% \changes{v0.1}{2005/03/19}{Initial version}
+% \changes{v0.2}{2005/03/21}{Updated Documentation}
+%
+% \GetFileInfo{chapterEnv.dtx}
+%
+% \DoNotIndex{\newcommand,\newenvironment,\def,\fi,\part,\chapter,\newif,\label}
+%
+%
+% \title{The \textsf{chapterEnv} package\thanks{This document
+%   corresponds to \textsf{chapterEnv}~\fileversion, dated \filedate.}\vspace{2mm}\\
+%   \small(\fileinfo)}
+%
+% \author{Lee Netherton \\ \small\texttt{ltn100@users.sourceforge.net}}
+%
+% \maketitle
+%
+% \parindent  0pt
+%
+% \section{Introduction}
+% \label{intro}
+%
+% The \textsf{chapterEnv} package provides chapter and sectioning
+% \emph{environments} in \LaTeX\ as an alternative to the traditional
+% sectioning \emph{commands}. The benefits of this approach include
+% the ability to generate material automatically
+% to the start \emph{and} end of chapters, sections and subsections.
+% Macros are provided in this package to allow the user to generate
+% content for any, or indeed, all of these environments.\\
+%
+% The most up-to-date version of this package can be found at:
+%
+%\begin{verbatim}
+%    http://sourceforge.net/projects/chapterenv/
+%\end{verbatim}
+%
+% \section{Editor Integration}
+% \label{editor-int}
+%
+% As this package changes the syntax of the structure of the document,
+% some \LaTeX\ editor suites may loose a certain amount of functionality
+% associated with them. If the editor suite is modular or configurable,
+% the functionality may be reobtained. At the present only the WinEdt
+% suite available for Windows has been tested.
+%
+% \subsection{Users of WinEdt}
+% \label{editor-winedt}
+%
+% Additions to the macros available for WinEdt are contained in the
+% |WinEdtUsers.readme| file which should be generated when running the
+% \LaTeX\ command on |chapterEnv.ins|. Please read this file and follow the
+% instructions.
+%
+% \iffalse
+%<*package>
+% \fi
+% \StopEventually{\PrintChanges\PrintIndex}
+%
+% \section{Implementation}
+% \label{implement}
+%
+%    \begin{macrocode}
+\RequirePackage{ifthen}%
+\newif\if@book\@bookfalse%
+\newif\if@article\@articlefalse%
+\newif\if@report\@reportfalse%
+\@ifundefined{@mainmatter}%
+{%
+    \@ifundefined{chapter}%
+    {%
+        %We are in an article class
+        \@articletrue%
+    }%
+    {%
+        %We are in a report class
+        \@reporttrue%
+    }%
+}%
+{%
+    %We are in a book class
+    \@booktrue%
+}%
+%    \end{macrocode}
+%
+% \subsection{Variables}
+% \label{vars}
+%
+% We start by defining some variables for this package.
+% \begin{macro}{\inc@startOfPart}
+% \begin{macro}{\inc@startOfChapter}
+% \begin{macro}{\inc@startOfSection}
+% \begin{macro}{\inc@startOfSubSection}
+% \begin{macro}{\inc@startOfSubSubSection}
+% Firstly we allocate some variables to contain the generated material that will be
+% inserted at the start of the chapters and sections. They are initially
+% empty, but can be redefined at a later date.
+%    \begin{macrocode}
+\def\inc@startOfPart{}%
+\def\inc@startOfChapter{}%
+\def\inc@startOfSection{}%
+\def\inc@startOfSubSection{}%
+\def\inc@startOfSubSubSection{}%
+\def\inc@startOfFrontMatter{}%
+\def\inc@startOfMainMatter{}%
+\def\inc@startOfBackMatter{}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\inc@endOfPart}
+% \begin{macro}{\inc@endOfChapter}
+% \begin{macro}{\inc@endOfSection}
+% \begin{macro}{\inc@endOfSubSection}
+% \begin{macro}{\inc@endOfSubSubSection}
+% The next few variables contain the generated material at the end of the chapters
+% and sections.
+%    \begin{macrocode}
+\def\inc@endOfPart{}%
+\def\inc@endOfChapter{}%
+\def\inc@endOfSection{}%
+\def\inc@endOfSubSection{}%
+\def\inc@endOfSubSubSection{}%
+\def\inc@endOfFrontMatter{}%
+\def\inc@endOfMainMatter{}%
+\def\inc@endOfBackMatter{}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\snd@frontMatter}
+% \begin{macro}{\snd@mainMatter}
+% \begin{macro}{\snd@backMatter}
+% These variables hold the value of |\secnumdepth| for the front, main and back
+% matter of the document. The value of |\secnumdepth| is how far down the sectioning
+% tree the section numbering goes before it stops counting.
+%    \begin{macrocode}
+\def\snd@frontMatter{-1}%
+\def\snd@mainMatter{2}%
+\def\snd@backMatter{2}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\env@label}
+% The next variable will contain a label for whichever section happens to be
+% being generated. This will allow for referencing of chapters/sections from inside
+% the generated content.
+%    \begin{macrocode}
+\def\env@label{}%
+%    \end{macrocode}
+% \end{macro}
+% Now we allocate a few switches to enable the user to temporarily turn
+% off the generated content.
+%    \begin{macrocode}
+\newif\if@addToPartEnv\@addToPartEnvtrue%
+\newif\if@addToChapterEnv\@addToChapterEnvtrue%
+\newif\if@addToSectionEnv\@addToSectionEnvtrue%
+\newif\if@addToSubSectionEnv\@addToSubSectionEnvtrue%
+\newif\if@addToSubSubSectionEnv\@addToSubSubSectionEnvtrue%
+\newif\if@addToFrontMatterEnv\@addToFrontMatterEnvtrue%
+\newif\if@addToMainMatterEnv\@addToMainMatterEnvtrue%
+\newif\if@addToBackMatterEnv\@addToBackMatterEnvtrue%
+%    \end{macrocode}
+%
+% \subsection{Starting and Stopping the Include Functions}
+% \label{startstop}
+%
+% To allow the user to stop the package from generating the default headings and footings
+% to the chapters and sections, there are various macros available.
+% \begin{macro}{\stopAddingToEnv}
+% Use this macro to stop the content generaton for \emph{all} chapters and sections. This
+% is achieved by setting all of the |\addTo|\ldots\ switches (section \ref{vars}) to \emph{false}.
+%    \begin{macrocode}
+\newcommand{\stopAddingToEnv}%
+{%
+    \@addToPartEnvfalse%
+    \@addToChapterEnvfalse%
+    \@addToSectionEnvfalse%
+    \@addToSubSectionEnvfalse%
+    \@addToSubSubSectionEnvfalse%
+    \@addToFrontMatterEnvfalse%
+    \@addToMainMatterEnvfalse%
+    \@addToBackMatterEnvfalse%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\startAddingToEnv}
+% To start the content generation for \emph{all} chapters and sections use |\startAddingToEnv|. This
+% sets all of the |\addTo|\ldots\ switches to \emph{true}.
+%    \begin{macrocode}
+\newcommand{\startAddingToEnv}%
+{%
+    \@addToPartEnvtrue%
+    \@addToChapterEnvtrue%
+    \@addToSectionEnvtrue%
+    \@addToSubSectionEnvtrue%
+    \@addToSubSubSectionEnvtrue%
+    \@addToFrontMatterEnvtrue%
+    \@addToMainMatterEnvtrue%
+    \@addToBackMatterEnvtrue%
+}%
+%    \end{macrocode}
+% \end{macro}
+%
+% \subsection{Acquiring Labels}
+% \label{labels}
+%
+% \begin{macro}{\envLabel}
+% The |\envLabel| command retrieves the label for the current chapter or section.
+% it can be used to reference the current section from within the generated section header
+% or footer. Use it with the |\ref{}| command, e.g.
+% \begin{center}|This is Chapter \ref{\envLabel}.|\end{center}
+% Would produce
+% \begin{center}This is Chapter 1.\end{center}
+% In the included part in Chapter 1.
+%    \begin{macrocode}
+\newcommand{\envLabel}{\env@label}%
+%    \end{macrocode}
+% \end{macro}
+%
+% \subsection{Defining Material to Be Included}
+% \label{material}
+%
+% If the user wishes to automatically generate some content at the start or end of
+% all chapters, or sections then that material can be defined using the macros
+% in this section. To suppress the inclusion of this material temporarily, use
+% the macros defined in section \ref{startstop}.
+%
+% \subsubsection{Document \emph{Parts}}
+% \begin{macro}{\addToStartOfPart}
+% Define the material to be added to the \emph{start} of the document Parts.
+%    \begin{macrocode}
+\newcommand{\addToStartOfPart}[1]%
+{%
+    \def\inc@startOfPart{#1}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\addToEndOfPart}
+% Define the material to be added to the \emph{end} of the document Parts.
+%    \begin{macrocode}
+\newcommand{\addToEndOfPart}[1]%
+{%
+    \def\inc@endOfPart{#1}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \subsubsection{Document \emph{Chapters}}
+% \begin{macro}{\addToStartOfChapter}
+% Define the material to be added to the \emph{start} of the document Chapters.
+%    \begin{macrocode}
+\newcommand{\addToStartOfChapter}[1]%
+{%
+    \def\inc@startOfChapter{#1}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\addToEndOfChapter}
+% Define the material to be added to the \emph{end} of the document Chapters.
+%    \begin{macrocode}
+\newcommand{\addToEndOfChapter}[1]%
+{%
+    \def\inc@endOfChapter{#1}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \subsubsection{Document \emph{Sections, SubSections and SubSubSections}}
+% \begin{macro}{\addToStartOfSection}
+% \begin{macro}{\addToStartOfSubSection}
+% \begin{macro}{\addToStartOfSubSubSection}
+% Define the material to be added to the \emph{start} of the document sections.
+%    \begin{macrocode}
+\newcommand{\addToStartOfSection}[1]%
+{%
+    \def\inc@startOfSection{#1}%
+}%
+\newcommand{\addToStartOfSubSection}[1]%
+{%
+    \def\inc@startOfSubSection{#1}%
+}%
+\newcommand{\addToStartOfSubSubSection}[1]%
+{%
+    \def\inc@startOfSubSubSection{#1}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\addToEndOfSection}
+% \begin{macro}{\addToEndOfSubSection}
+% \begin{macro}{\addToEndOfSubSubSection}
+% Define the material to be added to the \emph{end} of the document sections.
+%    \begin{macrocode}
+\newcommand{\addToEndOfSection}[1]%
+{%
+    \def\inc@endOfSection{#1}%
+}%
+\newcommand{\addToEndOfSubSection}[1]%
+{%
+    \def\inc@endOfSubSection{#1}%
+}%
+\newcommand{\addToEndOfSubSubSection}[1]%
+{%
+    \def\inc@endOfSubSubSection{#1}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \subsubsection{Front Matter, Main Matter, Back Matter}
+% \begin{macro}{\addToStartOfFrontMatter}
+% \begin{macro}{\addToStartOfMainMatter}
+% \begin{macro}{\addToStartOfBackMatter}
+% Define the material to be added to the \emph{start} of the document front, main and back
+% matters respectively.
+%    \begin{macrocode}
+\newcommand{\addToStartOfFrontMatter}[1]%
+{%
+    \def\inc@startOfFrontMatter{#1}%
+}%
+\newcommand{\addToStartOfMainMatter}[1]%
+{%
+    \def\inc@startOfMainMatter{#1}%
+}%
+\newcommand{\addToStartOfBackMatter}[1]%
+{%
+    \def\inc@startOfBackMatter{#1}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\addToStartOfFrontMatter}
+% \begin{macro}{\addToStartOfMainMatter}
+% \begin{macro}{\addToStartOfBackMatter}
+% Define the material to be added to the \emph{end} of the document front, main and back
+% matters respectively.
+%    \begin{macrocode}
+\newcommand{\addToEndOfFrontMatter}[1]%
+{%
+    \def\inc@endOfFrontMatter{#1}%
+}%
+\newcommand{\addToEndOfMainMatter}[1]%
+{%
+    \def\inc@endOfMainMatter{#1}%
+}%
+\newcommand{\addToEndOfBackMatter}[1]%
+{%
+    \def\inc@endOfBackMatter{#1}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \subsection{The Environments}
+% \label{environments}
+%
+%   In this section the environments will be defined. There are two environments
+%   defined to every type of section --- a starred version, and a non-starred version.
+%   The starred version provides a section with no number, whilst the non-starred version
+%   provides the section with an incremental section number. Obviously, starred sections
+%   cannot be referenced.\\
+%
+%   With the non-starred section environments there is an optional argument in square brackets
+%   with which the user can provide a label. This label can be referenced with the usual |\ref{}|
+%   command.\\
+%
+%   The sectioning environments are all started using the same syntax. For a non-starred environment:
+%   \begin{quote}
+%     |\begin{|\meta{section type}|Env}[|\meta{label}|]{|\meta{title}|}|\\
+%     \ldots\\
+%     |\end{|\meta{section type}|Env}|
+%   \end{quote}
+%   Where \meta{section type} is the type of section you want to create (part, chapter, section
+%   etc.), \meta{label} is an optional argument for the section's label, and \meta{title} is the
+%   title of the section that will appear in the document.\\
+%
+%   For the starred environment;
+%   \begin{quote}
+%     |\begin{|\meta{section type}|Env*}{|\meta{title}|}|\\
+%     \ldots\\
+%     |\end{|\meta{section type}|Env*}|
+%   \end{quote}
+%   the syntax is the same, apart from the omission of the \meta{label} option.
+%
+% \subsubsection{Document \emph{Part} Environments}
+% \label{partEnv}
+%
+% \begin{environment}{partEnv}
+%   The |partEnv| environment creates a new document Part. First the non-starred environment.
+%   The environment is created with two input parameters, with the first parameter (\texttt{\#1})
+%   defaulted to an empty string if there is no input given. At the beginning of the environment
+%   the part is created with the given title. Then, a label is created, and assigned to |\env@label|
+%   for later use with the |\envLabel| command. Finally, as long as the |\if@addToPartEnv| switch
+%   has not been set to false by the one of the |\stopAddingTo|\ldots commands, the `header' include for
+%   the Part is included.
+%    \begin{macrocode}
+\newenvironment{partEnv}[2][]%
+{%
+    \part{#2}%
+    \ifthenelse{\equal{#1}{}}{}{\label{#1}}%
+    \def\env@label{#1}%
+    \if@addToPartEnv%
+        \inc@startOfPart%
+    \fi%
+}%
+%    \end{macrocode}
+%   At the end of the environment, as long as the |\if@addToPartEnv| switch
+%   has not been set to false by the one of the |\stopAddingTo|\ldots\ commands, the `footer' include for
+%   the Part is included.
+%    \begin{macrocode}
+{%
+    \if@addToPartEnv%
+        \inc@endOfPart%
+    \fi
+}%
+%    \end{macrocode}
+% \end{environment}
+% \begin{environment}{partEnv*}
+%   Now for the starred version. It is exactly as non-starred version, except for the omission of
+%   the \meta{label} parameter, and the |\label{}| command.
+%    \begin{macrocode}
+\newenvironment{partEnv*}[1]%
+{%
+    \part*{#1}%
+    \if@addToPartEnv%
+        \inc@startOfPart%
+    \fi%
+}%
+{%
+    \if@addToPartEnv%
+        \inc@endOfPart%
+    \fi%
+}%
+%    \end{macrocode}
+% \end{environment}
+
+%
+% \subsubsection{Document \emph{Chapter} Environments}
+% \label{chapterEnv}
+%
+% \begin{environment}{chapterEnv}
+%   The |chapterEnv| environment works in exactly the same way as the |partEnv| (see section \ref{partEnv}).
+%   First the non-starred version.
+%    \begin{macrocode}
+\newenvironment{chapterEnv}[2][]%
+{%
+    \chapter{#2}%
+    \ifthenelse{\equal{#1}{}}{}{\label{#1}}%
+    \def\env@label{#1}%
+    \if@addToChapterEnv%
+        \inc@startOfChapter%
+    \fi%
+}%
+{%
+    \if@addToChapterEnv%
+        \inc@endOfChapter%
+    \fi%
+}%
+%    \end{macrocode}
+% \end{environment}
+% \begin{environment}{chapterEnv*}
+%   Now for the starred version.
+%    \begin{macrocode}
+\newenvironment{chapterEnv*}[1]%
+{%
+    \chapter*{#1}%
+    \if@addToChapterEnv%
+        \inc@startOfChapter%
+    \fi%
+}%
+{%
+    \if@addToChapterEnv%
+        \inc@endOfChapter%
+    \fi%
+}%
+%    \end{macrocode}
+% \end{environment}
+%
+% \subsubsection{Document \emph{Section} Environments}
+% \label{sectionEnv}
+%
+% \begin{environment}{sectionEnv}
+% \begin{environment}{subSectionEnv}
+% \begin{environment}{subSubSectionEnv}
+%   The |sectionEnv| environment works in exactly the same way as the |partEnv| (see section \ref{partEnv}).
+%   First the non-starred versions.
+%    \begin{macrocode}
+\newenvironment{sectionEnv}[2][]%
+{%
+    \section{#2}%
+    \ifthenelse{\equal{#1}{}}{}{\label{#1}}%
+    \def\env@label{#1}%
+    \if@addToSectionEnv%
+        \inc@startOfSection%
+    \fi%
+}%
+{%
+    \if@addToSectionEnv%
+        \inc@endOfSection%
+    \fi%
+}%
+\newenvironment{subSectionEnv}[2][]%
+{%
+    \subsection{#2}%
+    \ifthenelse{\equal{#1}{}}{}{\label{#1}}%
+    \def\env@label{#1}%
+    \if@addToSubSectionEnv%
+        \inc@startOfSubSection%
+    \fi%
+}%
+{%
+    \if@addToSubSectionEnv%
+        \inc@endOfSubSection%
+    \fi%
+}%
+\newenvironment{subSubSectionEnv}[2][]%
+{%
+    \subsubsection{#2}%
+    \ifthenelse{\equal{#1}{}}{}{\label{#1}}%
+    \def\env@label{#1}%
+    \if@addToSubSubSectionEnv%
+        \inc@startOfSubSubSection%
+    \fi%
+}%
+{%
+    \if@addToSubSubSectionEnv%
+        \inc@endOfSubSubSection%
+    \fi%
+}%
+%    \end{macrocode}
+% \end{environment}
+% \end{environment}
+% \end{environment}
+% \begin{environment}{sectionEnv*}
+% \begin{environment}{subSectionEnv*}
+% \begin{environment}{subSubSectionEnv*}
+%   Now for the starred versions.
+%    \begin{macrocode}
+\newenvironment{sectionEnv*}[1]%
+{%
+    \section*{#1}%
+    \if@addToSectionEnv%
+        \inc@startOfSection%
+    \fi%
+}%
+{%
+    \if@addToSectionEnv%
+        \inc@endOfSection%
+    \fi%
+}%
+\newenvironment{subSectionEnv*}[1]%
+{%
+    \subsection*{#1}%
+    \if@addToSubSectionEnv%
+        \inc@startOfSubSection%
+    \fi%
+}%
+{%
+    \if@addToSubSectionEnv%
+        \inc@endOfSubSection%
+    \fi%
+}%
+\newenvironment{subSubSectionEnv*}[1]%
+{%
+    \subsubsection*{#1}%
+    \if@addToSubSubSectionEnv%
+        \inc@startOfSubSubSection%
+    \fi%
+}%
+{%
+    \if@addToSubSubSectionEnv%
+        \inc@endOfSubSubSection%
+    \fi%
+}%
+%    \end{macrocode}
+% \end{environment}
+% \end{environment}
+% \end{environment}
+%
+% \subsection{Front, Main and Back Environments}
+%
+% \begin{environment}{frontMatterEnv}
+%   Now for the starred versions.
+%    \begin{macrocode}
+\newenvironment{frontMatterEnv}[1][]%
+{%
+    \if@book%
+         \frontmatter%
+    \else%
+        \newcounter{temp@FMsnd}%
+        \setcounter{temp@FMsnd}{\value{secnumdepth}}%
+        \setcounter{secnumdepth}{\snd@frontMatter}%
+    \fi%
+    \ifthenelse{\equal{#1}{}}%
+        {}%
+        {\pagenumbering{#1}}%
+    \if@addToFrontMatterEnv%
+        \inc@startOfFrontMatter%
+    \fi%
+}%
+{%
+    \if@addToFrontMatterEnv%
+        \inc@endOfFrontMatter%
+    \fi%
+    \if@book%
+        \@mainmattertrue%
+    \else%
+        \setcounter{secnumdepth}{\value{temp@FMsnd}}%
+    \fi%
+}%
+%    \end{macrocode}
+% \end{environment}
+%
+% \begin{environment}{mainMatterEnv}
+%   Now for the starred versions.
+%    \begin{macrocode}
+\newenvironment{mainMatterEnv}[1][]%
+{%
+    \if@book%
+         \mainmatter%
+    \else%
+        \newcounter{temp@MMsnd}%
+        \setcounter{temp@MMsnd}{\value{secnumdepth}}%
+        \setcounter{secnumdepth}{\snd@mainMatter}%
+    \fi%
+    \ifthenelse{\equal{#1}{}}%
+        {}%
+        {\pagenumbering{#1}}%
+    \if@addToMainMatterEnv%
+        \inc@startOfMainMatter%
+    \fi%
+}%
+{%
+    \if@addToMainMatterEnv%
+        \inc@endOfMainMatter%
+    \fi%
+    \if@book%
+    \else%
+        \setcounter{secnumdepth}{\value{temp@MMsnd}}%
+    \fi%
+}%
+%    \end{macrocode}
+% \end{environment}
+%
+% \begin{environment}{backMatterEnv}
+%   Now for the starred versions.
+%    \begin{macrocode}
+\newenvironment{backMatterEnv}[1][]%
+{%
+    \appendix%
+    \if@book%
+         \backmatter%
+    \else%
+        \newcounter{temp@BMsnd}%
+        \setcounter{temp@BMsnd}{\value{secnumdepth}}%
+        \setcounter{secnumdepth}{\snd@backMatter}%
+    \fi%
+    \ifthenelse{\equal{#1}{}}%
+        {}%
+        {\pagenumbering{#1}}%
+    \if@addToBackMatterEnv%
+        \inc@startOfBackMatter%
+    \fi%
+}%
+{%
+    \if@addToBackMatterEnv%
+        \inc@endOfBackMatter%
+    \fi%
+    \if@book%
+    \else%
+        \setcounter{secnumdepth}{\value{temp@BMsnd}}%
+    \fi%
+}%
+%    \end{macrocode}
+% \end{environment}
+% \iffalse
+%</package>
+%
+% \Finale
+%
+%^^A%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%^^A%                END OF PACKAGE
+%^^A%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%^^A---------------------------------------------------------------------
+%^^A-                Example File
+%^^A---------------------------------------------------------------------
+%<*example>
+\documentclass[12pt,a4paper,dvips]{report}
+\usepackage{chapterEnv}
+
+\addToStartOfChapter%
+{%
+    % Add a horizontal line to the start of the include
+    \rule{140mm}{0.5pt}\\
+    This is a paragraph that will be added to the start of every chapter
+    (unless we specifically declare otherwise with the
+    $\backslash$\texttt{stopAddingToChapterEnv} or
+    $\backslash$\texttt{stopAddingToAllEnvs} commands.\\
+    % Add a horizontal line to the end of the include
+    \rule{140mm}{0.5pt}\\
+}%
+
+\addToEndOfChapter%
+{%
+    % Add a horizontal line to the start of the include
+    \\\rule{140mm}{0.5pt}\\
+    This will be added to the end of the chapter. The chapter number
+    (and indeed and section environment number) can be got by the
+    command $\backslash$\texttt{envLabel} and passing it into
+    $\backslash$\texttt{ref\{\}}. For example;\\
+    \begin{center}%
+        \texttt{This chapter is Chapter }
+        $\backslash$\texttt{ref\{}$\backslash$\texttt{envLabel\}}\\
+    \end{center}%
+    Produces:\\
+    \begin{center}%
+        This chapter is Chapter \ref{\envLabel}.
+    \end{center}%
+    % Add a horizontal line to the end of the include
+    \rule{140mm}{0.5pt}
+}%
+
+\addToStartOfSection%
+{%
+    % Add a horizontal line to the start of the include
+    \rule{140mm}{1.5pt}\\
+}%
+
+\addToEndOfSection%
+{%
+    % Add a horizontal line to the end of the include
+    \\\rule{140mm}{1.5pt}
+}%
+
+\addToStartOfSubSection%
+{%
+    % Add a horizontal line to the start of the include
+    \rule{140mm}{1pt}\\
+}%
+
+\addToEndOfSubSection%
+{%
+    % Add a horizontal line to the end of the include
+    \\\rule{140mm}{1pt}
+}%
+
+\addToStartOfSubSubSection%
+{%
+    % Add a horizontal line to the start of the include
+    \rule{140mm}{0.5pt}\\
+}%
+
+\addToEndOfSubSubSection%
+{%
+    % Add a horizontal line to the end of the include
+    \\\rule{140mm}{0.5pt}
+}%
+
+\begin{document}
+
+    % A preface, with no chapter number,
+    % so we use chapterEnv*
+    \stopAddingToEnv
+    \begin{chapterEnv*}{Preface}
+        Pre-waffle\ldots\\
+
+        We have removed the includes from this chapter by surrounding it
+        with the $\backslash$\texttt{stopAddingToEnv} and
+        $\backslash$\texttt{startAddingToEnv} commands.
+    \end{chapterEnv*}
+    \startAddingToEnv
+
+    % We can create a Part to group the first chapters.
+    \begin{partEnv}[pt:first]{First Half}
+        % Introductory chapter with the label 'chap:intro'
+        \begin{chapterEnv}[chap:intro]{Introduction}
+            Hello. This is Chapter \ref{chap:intro}.\\
+        \end{chapterEnv}
+
+        \begin{chapterEnv}[chap:back]{Background}
+            Some useful background information\ldots\\
+        \end{chapterEnv}
+    \end{partEnv}
+
+    % We can create a second Part to group the middle chapters.
+    \begin{partEnv}[pt:middle]{Middle Half}
+        \begin{chapterEnv}[chap:interest]{Interesting Stuff}
+            Loads of interesting stuff here\ldots\\
+            \begin{sectionEnv}[sec:newsec]{New Section}
+                This is a new section\ldots\\
+                \begin{subSectionEnv}[subsec:newsubsec]{New SubSection}
+                    This is a new subsection\ldots\\
+                    \begin{subSubSectionEnv}[subsubsec:newsubsubsec]{New SubSubSection}
+                        This is a new subsubsection!\\
+                    \end{subSubSectionEnv}
+                \end{subSectionEnv}
+            \end{sectionEnv}
+        \end{chapterEnv}
+
+        \begin{chapterEnv}[chap:more]{Even More Interesting Stuff}
+            More interesting stuff in Chapter~\ref{chap:more} (Part~\ref{pt:middle})\ldots\\
+        \end{chapterEnv}
+    \end{partEnv}
+
+    % Last chapter - not in a part
+    \begin{chapterEnv}[chap:conclude]{Conclusion}
+        This is the last chapter, it is not in a Part.
+    \end{chapterEnv}
+
+\end{document}
+%</example>
+%
+%^^A---------------------------------------------------------------------
+%^^A-                WinEdt Install File
+%^^A---------------------------------------------------------------------
+%<*WinEdtInstallFile>%
+// -*- ASCII:EDT -*-
+// WinEdt_install_chapterEnv.edt
+// (Netherton 20050429)
+// dynamic highlighting for EDT mode
+/////////////////////////////////////
+
+
+Requires(20030429); // WinEdt 5.4
+
+IfFileExists("%b\Macros\WinEdt_install_chapterEnv.edt","",">
+Prompt('You have to install this package from the folder%\>
+%b\Macros\%\%\>
+I cannot continue!%\%\>
+Please extract the zip file you downloaded into this folder and>
+start again.',3,1);Exit;");
+
+// Check whether all required packages exist on the system
+Assign("addOrUpdate_OK","1");
+IfFileExists("%b\Macros\macro\addOrUpdate.edt","Assign('addOrUpdate','%b\Macros\macro\addOrUpdate.edt');",>
+   "IfFileExists('%B\Macros\macro\addOrUpdate.edt','Assign(''addOrUpdate'',''%B\Macros\macro\addOrUpdate.edt'');',>
+      'Assign(''addOrUpdate_OK'',''0'');');");
+
+IfStr("%$('addOrUpdate_OK');","0","<",">
+   Prompt('The chapterEnv mode requires the%\``addOrUpdate'' package, %\which is available from www.winedt.org.%\%\>
+Do you want me to lead you to the download page?',2,3,>
+   'ShellExecute(''open'',''http://www.winedt.org/Macros/macro/'','''','''',0);Exit;','Exit;');");
+IfStr("%$('addOrUpdate_OK');","1","<",!">
+   IfStr('%$(|addOrUpdate_OK|);','0','=','Assign(''packageMissing'',''addOrUpdate'');','');>
+   Prompt('The EDTplus mode requires latest version of the%\`%$(|packageMissing|);'' package, which is available from www.winedt.org.%\%\>
+Do you want me to download it for you?%\(You have to save it in%\%b\Macros\macro.)',2,3,>
+  !'IfStr(''%$(|packageMissing|);'',''addOrUpdate'',''='',''Assign(|packageMissing|,|addOrUpdate.edt|);'','''');>
+    ShellExecute(''open'',''http://www.winedt.org/Macros/macro/%$(|packageMissing|);'','''','''',0);Exit;','Exit;');");
+
+Prompt("           This will install%\%\>
+ chapterEnv support  %\%\>
+                Install it?",1,0);
+
+Release("chapterEnv_install");
+
+   // add filters:
+   //AddFilters("%b\Config\EDT\EDT_Filter Sets.dat");
+   //IfOK("",!"Assign('EDT_install','%$(|EDT_install|);!!!   I could not add the Filter Set!%\');");
+   //HighlightingOK;
+
+   // GDI additions:
+   Assign("requiresAOUversion","2003-03-20");
+   Assign("extensionKey", "chapterEnv");
+   Assign("extensionFile", "%b\Macros\WinEdt_chapterEnv.gdi");
+   Assign("localTargetFile", "%b\WinEdt.gdi");
+   Assign("globalTargetFile", "%B\WinEdt.gdi");
+   Exe("%$('addOrUpdate');");
+   IfStr("%$('AOUerror');","0","=",>
+     !"SetGDI('%b\WinEdt.gdi');",>
+     !"Assign('chapterEnv_install','!!!  I could not add GDI additions%\     Please copy the contents of the file WinEdt_chapterEnv.gdi into%\     your GDI definition file yourself.');");
+
+   // add menu entry "Update Dynamic Keywords" + "Set Tree"
+//   OpenOutput("%b\Config\EDT\_menu.dat");>
+//   WrL("MAIN MENU: 193%\%\>
+//MENU:&Tools%\  Flags:0%\  Hint:%\  Macro:11%\    Item:Update Dynamic Keywords%\    Definition:IfFileExists(""%%b\Macros\macro\dynamicUpdate.edt"",""Exe('%%b\Macros\macro\dynamicUpdate.edt');"",""Exe('%%B\Macros\macro\dynamicUpdate.edt');"");%\    Image:194%\END Menu:&Tools%\%\>
+//MENU:&Macros%\  Flags:0%\  Hint:%\  Macro:11%\    Item:Set Tree%\    File:""%%!m=EDT""%\    Definition:Exe(""%%b\Config\EDT\setTree.edt"");%\    Image:42%\END Menu:&Macros%\");
+//   CloseOutput;
+//   AddMenus("%b\Config\EDT\_menu.dat",1);
+//   IfOK(!"DeleteFile('%b\Config\EDT\_menu.dat');",>
+//     !"Assign('EDT_install','%$(|EDT_install|);!!!   I could not add the menu entry ""Update Dynamic Keywords""!%\');");
+
+   // add active strings "Assign(," and ":?::"
+//   AddActive("%b\Config\EDT\EDT_Active Strings.dat");
+//   IfOK(!"ActiveOK;",!"Assign('EDT_install','%$(|EDT_install|);!!!   I could not add the Active Strings!%\');");
+
+   // add empty dictionaries
+//   OpenOutput("%b\Config\EDT\dynamicKeywords_Labels.dic");
+//   WrL("%% this dictionary contains no words");
+//   CloseOutput;
+//   AddDictionary("Dynamic EDT Assign","%%b\Config\EDT\dynamicKeywords_Labels.dic","EDT",1,1,0,0,1);
+//   OpenOutput("%b\Config\EDT\dynamicKeywords_Assign.dic");
+//   WrL("%% this dictionary contains no words");
+//   CloseOutput;
+//   AddDictionary("Dynamic EDT Assign","%%b\Config\EDT\dynamicKeywords_Assign.dic","EDT",1,1,0,0,1);
+//   OpenOutput("%b\Config\EDT\dynamicKeywords_Local Regs.dic");
+//   WrL("%% this dictionary contains no words");
+//   CloseOutput;
+//   AddDictionary("Dynamic EDT Local Regs","%%b\Config\EDT\dynamicKeywords_Local Regs.dic","EDT",1,1,0,0,1);
+
+GetBuild(0);
+IfNum(%!0,20041213,">=",!`>
+   // WinEdtEx settings
+   CopyFile("%b\Macros\WinEdt_chapterEnv.ini","%b\Local\WinEdt_chapterEnv.ini",1,1);>
+   Assign("extensionFile", "%b\Macros\_startup.edt");>
+   WriteFile("%$('extensionFile');",``>
+/%_/ @BEGIN: chapterEnv%\>
+/%_/ @AUTHOR: Lee Netherton%\>
+/%_/ $Date: 2006-02-07 17:47:20 $%\>
+/%_/ $Revision: 1.1 $%\>
+IfStr("%%$('WinEdtEx-chapterEnv');","Loaded","<>",!">%\>
+   LoadConfig('%%b\Local\WinEdt_chapterEnv.ini',1);>%\>
+   Assign('WinEdtEx-chapterEnv','Loaded');>%\>
+");%\>
+/%_/ @END: chapterEnv%\%\>
+``);>
+   Assign("localTargetFile", "%b\Local\Startup.edt");>
+   IfFileExists("%$('localTargetFile');","",!">
+      WriteFile('%$(|localTargetFile|);','/%_/ Local Configuration file loaded on startup%\%\End;');");>
+   Assign("globalTargetFile", "%$('localTargetFile');");>
+   Exe("%$('addOrUpdate');");>
+   IfStr("%$('AOUerror');","0","=",>
+     !"DeleteFile('%b\Macros\_startup.edt');",>
+     !"Assign('chapterEnv_install','%$(|chapterEnv_install|);* Could not change startup macro.%\')");>
+   LoadConfig("%b\Local\WinEdt_chapterEnv.ini",1);>
+   // Build Tree Event
+//   Assign("extensionFile", "%b\Macros\_startup.edt");>
+//   WriteFile("%$('extensionFile');",``>
+///%_/ @BEGIN: chapterEnv%\>
+///%_/ @AUTHOR: Lee Netherton%\>
+///%_/ $Date: 2006-02-07 17:47:20 $%\>
+///%_/ $Revision: 1.1 $%\>
+//IfisMode("chapterEnv","%%!m",!">%\>
+//   Assign('chapterEnv_update','Labels');>%\>
+//   Exe('%%b\Macros\macro\dynamicUpdate.edt');");%\>
+///%_/ @END: EDTplus%\%\>
+//``);>
+//   Assign("localTargetFile","%b\Local\Events\BuildTreeAfter.edt");>
+//   IfFileExists("%$('localTargetFile');","",!">
+//      WriteFile('%$(|localTargetFile|);','/%_/ Local Tree Build Event Handler (After)%\%\End;');");>
+//   Assign("globalTargetFile", "%$('localTargetFile');");>
+//   Exe("%$('addOrUpdate');");>
+//   IfStr("%$('AOUerror');","0","=",>
+//     !"DeleteFile('%b\Macros\_startup.edt');",>
+//     !"Assign('chapterEnv_install','%$(|chapterEnv_install|);* Could not change build tree event macro.%\')");>
+`);
+
+CMD("Save Settings");
+
+IfStr("%$('chapterEnv_install');","","=","Assign('chapterEnv_install','I installed everything successfully!%\');");
+Assign("chapterEnv_install","%$('chapterEnv_install');%\You have to restart WinEdt for the changes to become effective.%\%\>
+You can then open a macro file of your choice and choose%\""Tools | Update Dynamic Keywords"" to see dynamic highlighting working.");
+
+Prompt("%$('chapterEnv_install');",0,1);
+
+End; $Id: WinEdt_install_chapterEnv.edt,v 1.3 2005-04-24 19:18:53+01
+Netherton $
+
+%</WinEdtInstallFile>%
+%
+%^^A---------------------------------------------------------------------
+%^^A-                WinEdt Uninstall File
+%^^A---------------------------------------------------------------------
+%<*WinEdtUninstallFile>%
+// -*- ASCII:EDT -*-
+// WinEdt_uninstall_chapterEnv.edt
+// (schlicht 20030218)
+/////////////////////////
+
+
+Prompt("              This will uninstall chapterEnv%\>
+                   Continue?",1,0);
+
+Release("addOrUpdate");
+IfFileExists("%b\Macros\macro\addOrUpdate.edt",>
+   "Assign('addOrUpdate','%b\Macros\macro\addOrUpdate.edt');",>
+   "IfFileExists('%B\Macros\macro\addOrUpdate.edt',>
+      'Assign(''addOrUpdate'',''%B\Macros\macro\addOrUpdate.edt'');');");
+
+Release("chapterEnv_uninstall");
+
+
+StartWorking("removing GDI additions..."); Assign("extensionKey",>
+"chapterEnv");
+Assign("localTargetFile", "%b\WinEdt.gdi");
+Assign("globalTargetFile", "%$('localTargetFile');");
+Assign("deleteExtension","1");
+IfStr("%$('addOrUpdate');","","=","Assign('AOUerror','1');",>
+   "Exe('%$(|addOrUpdate|);');");
+IfStr("%$('AOUerror');","0","=","",>
+  !"Assign('chapterEnv_uninstall','%$(|chapterEnv_uninstall|); * I could not remove GDI additions%\');");
+
+StartWorking("saving event additions...");
+Assign("localTargetFile", "%b\Local\Startup.edt");
+Assign("globalTargetFile", "%$('localTargetFile');");
+Assign("deleteExtension","1");
+IfStr("%$('addOrUpdate');","","=","Assign('AOUerror','1');",>
+   "Exe('%$(|addOrUpdate|);');");
+IfStr("%$('AOUerror');","0","=","",>
+   !"Assign('chapterEnv_uninstall','%$(|chapterEnv_uninstall|); * I could not remove startup macro additions.%\')");
+DeleteFile("%b\Local\WinEdt_chapterEnv.ini");
+
+StartWorking("saving settings..."); CMD("Save Settings");
+
+StopWorking;
+
+IfStr("%$('chapterEnv_uninstall');","","=","Assign('chapterEnv_uninstall','All'); LetRegNum(0,0);",>
+  "Assign('chapterEnv_uninstall','%$(|chapterEnv_uninstall|);%\All other'); LetRegNum(0,2);");
+
+Assign("chapterEnv_uninstall","%$('chapterEnv_uninstall'); components have been removed successfully.");
+
+Prompt("%$('chapterEnv_uninstall');",%!0,1);
+
+Release("chapterEnv_uninstall"); LetReg(0,""); LetReg(1,"");
+LetReg(2,"");
+
+End;
+
+$Id: WinEdt_uninstall_chapterEnv.edt,v 1.3 2005-02-21 19:18:53+01
+Netherton $
+
+%</WinEdtUninstallFile>%
+%
+%^^A---------------------------------------------------------------------
+%^^A-                WinEdt INI File
+%^^A---------------------------------------------------------------------
+%<*WinEdtINIFile>%
+// -*- DATA:INI -*-
+// part of the chapterEnv package
+// $Id: chapterEnv.dtx,v 1.1 2006-02-07 17:47:20 ltn100 Exp $
+
+[BUILD]
+
+REQUIRES=20041213
+
+[NAVIGATION_BAR]
+
+BRANCH="cEnv-TOC"
+  BRANCH_MODE="TeX|DTX"
+  BRANCH_ICON="TOC"
+  BRANCH_SORTED=0
+  BRANCH_CASE_SENSITIVE=1
+  BRANCH_IGNORE_COMMENTS=1
+  BRANCH_EXPANDED=0
+
+  ITEM="\begin{titlepage}"
+    MODE="TeX"
+    CASE_SENSITIVE=1
+    BEGINNING_OF_LINE_ONLY=0
+    CURRENT_DOCUMENT_ONLY=0
+    ALL_OPENED_DOCUMENTS=0
+    COMPLETE_PROJECT_TREE=1
+    ICON="Paragraph"
+    LEVEL=3
+    CAPTION="Title Page"
+    BALANCED="{}\"
+    MAX_LINE_SPAN=3
+    ON_CTRL_CLICK="GlobalMark;TreeTrack(2);"
+    ON_CTRL_DBL_CLICK="Relax;"
+    ON_CLICK="TreeTrack(2,1);"
+    ON_DBL_CLICK="TreeTrack(2,2);"
+    ACTION="Find"
+      MENU_ICON="Find"
+      MACRO="TreeTrack(2);"
+
+  ITEM="\begin{frontMatterEnv}"
+    MODE="TeX"
+    CASE_SENSITIVE=1
+    BEGINNING_OF_LINE_ONLY=0
+    CURRENT_DOCUMENT_ONLY=0
+    ALL_OPENED_DOCUMENTS=0
+    COMPLETE_PROJECT_TREE=1
+    ICON="TOC"
+    LEVEL=3
+    CAPTION="FrontMatter"
+    BALANCED="{}\"
+    MAX_LINE_SPAN=3
+    ON_CTRL_CLICK="GlobalMark;TreeTrack(2);"
+    ON_CTRL_DBL_CLICK="Relax;"
+    ON_CLICK="TreeTrack(2,1);"
+    ON_DBL_CLICK="TreeTrack(2,2);"
+    ACTION="Find"
+      MENU_ICON="Find"
+      MACRO="TreeTrack(2);"
+
+  ITEM="\begin{mainMatterEnv}"
+    MODE="TeX"
+    CASE_SENSITIVE=1
+    BEGINNING_OF_LINE_ONLY=0
+    CURRENT_DOCUMENT_ONLY=0
+    ALL_OPENED_DOCUMENTS=0
+    COMPLETE_PROJECT_TREE=1
+    ICON="TOC"
+    LEVEL=3
+    CAPTION="MainMatter"
+    BALANCED="{}\"
+    MAX_LINE_SPAN=3
+    ON_CTRL_CLICK="GlobalMark;TreeTrack(2);"
+    ON_CTRL_DBL_CLICK="Relax;"
+    ON_CLICK="TreeTrack(2,1);"
+    ON_DBL_CLICK="TreeTrack(2,2);"
+    ACTION="Find"
+      MENU_ICON="Find"
+      MACRO="TreeTrack(2);"
+
+  ITEM="\begin{backMatterEnv}"
+    MODE="TeX"
+    CASE_SENSITIVE=1
+    BEGINNING_OF_LINE_ONLY=0
+    CURRENT_DOCUMENT_ONLY=0
+    ALL_OPENED_DOCUMENTS=0
+    COMPLETE_PROJECT_TREE=1
+    ICON="TOC"
+    LEVEL=3
+    CAPTION="BackMatter"
+    BALANCED="{}\"
+    MAX_LINE_SPAN=3
+    ON_CTRL_CLICK="GlobalMark;TreeTrack(2);"
+    ON_CTRL_DBL_CLICK="Relax;"
+    ON_CLICK="TreeTrack(2,1);"
+    ON_DBL_CLICK="TreeTrack(2,2);"
+    ACTION="Find"
+      MENU_ICON="Find"
+      MACRO="TreeTrack(2);"
+
+  ITEM="\begin{partEnv?}?{?}"
+    MODE="TeX"
+    CASE_SENSITIVE=1
+    BEGINNING_OF_LINE_ONLY=0
+    CURRENT_DOCUMENT_ONLY=0
+    ALL_OPENED_DOCUMENTS=0
+    COMPLETE_PROJECT_TREE=1
+    ICON="Folder"
+    LEVEL=4
+    CAPTION="%?"
+    BALANCED="{}\"
+    MAX_LINE_SPAN=3
+    ON_CTRL_CLICK="GlobalMark;TreeTrack(2);"
+    ON_CTRL_DBL_CLICK="Relax;"
+    ON_CLICK="TreeTrack(2,1);"
+    ON_DBL_CLICK="TreeTrack(2,2);"
+    ACTION="Find"
+      MENU_ICON="Find"
+      MACRO="TreeTrack(2);"
+
+  ITEM="\begin{abstract}"
+    MODE="TeX"
+    CASE_SENSITIVE=1
+    BEGINNING_OF_LINE_ONLY=0
+    CURRENT_DOCUMENT_ONLY=0
+    ALL_OPENED_DOCUMENTS=0
+    COMPLETE_PROJECT_TREE=1
+    ICON="Chapter"
+    LEVEL=8
+    CAPTION="Abstract"
+    BALANCED="{}\"
+    MAX_LINE_SPAN=3
+    ON_CTRL_CLICK="GlobalMark;TreeTrack(2);"
+    ON_CTRL_DBL_CLICK="Relax;"
+    ON_CLICK="TreeTrack(2,1);"
+    ON_DBL_CLICK="TreeTrack(2,2);"
+    ACTION="Find"
+      MENU_ICON="Find"
+      MACRO="TreeTrack(2);"
+    ACTION="Insert Reference"
+      MENU_ICON="ArrowPurple"
+      MACRO="GlobalReturn;SetSel(0);Ins('\ref{%?}');GlobalMark;"
+
+  ITEM="\begin{chapterEnv?}?{?}"
+    MODE="TeX"
+    CASE_SENSITIVE=1
+    BEGINNING_OF_LINE_ONLY=0
+    CURRENT_DOCUMENT_ONLY=0
+    ALL_OPENED_DOCUMENTS=0
+    COMPLETE_PROJECT_TREE=1
+    ICON="Chapter"
+    LEVEL=8
+    CAPTION="%?"
+    BALANCED="{}\"
+    MAX_LINE_SPAN=3
+    ON_CTRL_CLICK="GlobalMark;TreeTrack(2);"
+    ON_CTRL_DBL_CLICK="Relax;"
+    ON_CLICK="TreeTrack(2,1);"
+    ON_DBL_CLICK="TreeTrack(2,2);"
+    ACTION="Find"
+      MENU_ICON="Find"
+      MACRO="TreeTrack(2);"
+    ACTION="Insert Reference"
+      MENU_ICON="ArrowPurple"
+      MACRO="GlobalReturn;SetSel(0);Ins('\ref{%?}');GlobalMark;"
+
+  ITEM="\begin{sectionEnv?}?{?}"
+    MODE="TeX"
+    CASE_SENSITIVE=1
+    BEGINNING_OF_LINE_ONLY=0
+    CURRENT_DOCUMENT_ONLY=0
+    ALL_OPENED_DOCUMENTS=0
+    COMPLETE_PROJECT_TREE=1
+    ICON="Section"
+    LEVEL=12
+    CAPTION="%?"
+    BALANCED="{}\"
+    MAX_LINE_SPAN=3
+    ON_CTRL_CLICK="GlobalMark;TreeTrack(2);"
+    ON_CTRL_DBL_CLICK="Relax;"
+    ON_CLICK="TreeTrack(2,1);"
+    ON_DBL_CLICK="TreeTrack(2,2);"
+    ACTION="Find"
+      MENU_ICON="Find"
+      MACRO="TreeTrack(2);"
+
+  ITEM="\begin{subSectionEnv?}?{?}"
+    MODE="TeX"
+    CASE_SENSITIVE=1
+    BEGINNING_OF_LINE_ONLY=0
+    CURRENT_DOCUMENT_ONLY=0
+    ALL_OPENED_DOCUMENTS=0
+    COMPLETE_PROJECT_TREE=1
+    ICON="Subsection"
+    LEVEL=16
+    CAPTION="%?"
+    BALANCED="{}\"
+    MAX_LINE_SPAN=3
+    ON_CTRL_CLICK="GlobalMark;TreeTrack(2);"
+    ON_CTRL_DBL_CLICK="Relax;"
+    ON_CLICK="TreeTrack(2,1);"
+    ON_DBL_CLICK="TreeTrack(2,2);"
+    ACTION="Find"
+      MENU_ICON="Find"
+      MACRO="TreeTrack(2);"
+
+ITEM="\begin{subSubSectionEnv?}?{?}"
+    MODE="TeX"
+    CASE_SENSITIVE=1
+    BEGINNING_OF_LINE_ONLY=0
+    CURRENT_DOCUMENT_ONLY=0
+    ALL_OPENED_DOCUMENTS=0
+    COMPLETE_PROJECT_TREE=1
+    ICON="Subsubsection"
+    LEVEL=20
+    CAPTION="%?"
+    BALANCED="{}\"
+    MAX_LINE_SPAN=3
+    ON_CTRL_CLICK="GlobalMark;TreeTrack(2);"
+    ON_CTRL_DBL_CLICK="Relax;"
+    ON_CLICK="TreeTrack(2,1);"
+    ON_DBL_CLICK="TreeTrack(2,2);"
+    ACTION="Find"
+      MENU_ICON="Find"
+      MACRO="TreeTrack(2);"
+
+BRANCH="cEnv-Labels"
+  BRANCH_MODE="TeX"
+  BRANCH_ICON="Object"
+  BRANCH_SORTED=0
+  BRANCH_CASE_SENSITIVE=1
+  BRANCH_IGNORE_COMMENTS=1
+  BRANCH_EXPANDED=0
+
+  ITEM="\begin{?Env}[?]"
+    MODE="TeX"
+    CASE_SENSITIVE=1
+    BEGINNING_OF_LINE_ONLY=0
+    CURRENT_DOCUMENT_ONLY=0
+    ALL_OPENED_DOCUMENTS=0
+    COMPLETE_PROJECT_TREE=1
+    RETURN_AT_EOF=1
+    ICON="ArrowRed"
+    LEVEL=0
+    CAPTION="%?"
+    ON_CTRL_CLICK="GlobalMark;TreeTrack(2);"
+    ON_CLICK="TreeTrack(2,1);"
+    ON_DBL_CLICK="GlobalReturn;SetSel(0);Ins('%?');GlobalMark;"
+    ACTION="Find"
+      MENU_ICON="Find"
+      MACRO="TreeTrack(2);"
+    ACTION="Insert"
+      MENU_ICON="ArrowPurple"
+      MACRO="GlobalReturn;SetSel(0);Ins('%?');GlobalMark;"
+
+%</WinEdtINIFile>%
+%
+%^^A---------------------------------------------------------------------
+%^^A-                WinEdt GDI File
+%^^A---------------------------------------------------------------------
+%<*WinEdtGDIFile>%
+// @BEGIN: chapterEnv
+// @AUTHOR: Lee Netherton
+// $Date: 2006-02-07 17:47:20 $
+// -------------------------------------------------------------
+// Additions for chapterEnv mode (= chapterEnv)
+// -------------------------------------------------------------
+
+Item('TeX','',1,0,'\begin{?Env}[?]',0,1,1);
+
+// -------------------------------------------------------------
+// @END: chapterEnv
+
+%</WinEdtGDIFile>%
+%
+%^^A---------------------------------------------------------------------
+%^^A-                WinEdt Readme file
+%^^A---------------------------------------------------------------------
+%<*WinEdtReadmeFile>
+WinEdt Plugin Readme File
+-------------------------
+
+As you are reading this file you must have already generated the
+install files. Copy all of the files starting with WinEdt_ into
+WinEdt's Macro directory. Then open WinEdt and goto Macros ->
+Execute Macro... and select the WinEdt_install_chapterEnv.edt file
+that you have just copied in. The script will run... press 'yes' a
+few times and when it has finished restart WinEdt.
+
+At the moment I haven't found a way to integrate it automatically
+with the default TOC, so the chapterEnv TOC will be separate from
+the normal \chapter{...} invoked TOC. If you want it to be part of
+the default TOC, then I suggest NOT running the install macro, and
+instead, copy and pasting the relevant parts from
+WinEdt_chapterEnv.ini and WinEdt_chapterEnv.gdi into the appropriate
+places in WinEdtEx.ini and WinEdt.gdi (both found in the WinEdt root
+folder) respectively - Although this does involve knowing a little
+about WinEdt's scripting language.
+
+It's not perfect, but this is an alpha release so thats the way it
+is. If anyone has more experience with WinEdt install macros, and
+wants to help out then please do!
+
+Lee Netherton
+<ltn100@users.sourceforge.net>
+%</WinEdtReadmeFile>
+%
+% \fi
+\endinput
